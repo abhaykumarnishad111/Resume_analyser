@@ -38,6 +38,8 @@ USER node
 COPY --chown=node:node package*.json ./
 RUN npm ci --omit=dev
 
+RUN npx puppeteer browsers install chrome
+
 COPY --chown=node:node server.js ./server.js
 COPY --chown=node:node src ./src
 
