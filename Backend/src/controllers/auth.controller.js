@@ -3,6 +3,26 @@ const bcrypt = require("bcryptjs")
 const jwt = require("jsonwebtoken")
 const tokenBlacklistModel = require("../models/blacklist.model")
 
+const cookieOptions = {
+    httpOnly: true,
+    path: "/",
+    sameSite: process.env.COOKIE_SAME_SITE || "lax",
+    secure: process.env.NODE_ENV === "production",
+    maxAge: 24 * 60 * 60 * 1000,
+}
+
+function signToken(user) {
+    if (!process.env.JWT_SECRET) throw new Error("JWT_SECRET is not configured")
+    return jwt.sign({ id: user._id, username: user.username }, process.env.JWT_SECRET, { expiresIn: "1d" })
+}
+
+function setAuthCookie(res, token) {
+    const options = { httpOnly: cookieOptions.httpOnly, sameSite: cookieOptions.sameSite, secure: cookieOptions.secure }
+    // Clear the old cookie scoped to /api/auth before replacing it with a site-wide cookie.
+    res.clearCookie("token", { ...options, path: "/api/auth" })
+    res.cookie("token", token, cookieOptions)
+}
+
 /**
  * @name registerUserController
  * @description register a new user, expects username, email and password in the request body
@@ -10,7 +30,7 @@ const tokenBlacklistModel = require("../models/blacklist.model")
  */
 async function registerUserController(req, res) {
 
-    const { username, email, password } = req.body
+    const { username, email, password } = req.body || {}
 
     if (!username || !email || !password) {
         return res.status(400).json({
@@ -28,6 +48,8 @@ async function registerUserController(req, res) {
         })
     }
 
+    if (password.length < 8) return res.status(400).json({ message: "Password must be at least 8 characters long." })
+
     const hash = await bcrypt.hash(password, 10)
 
     const user = await userModel.create({
@@ -36,13 +58,9 @@ async function registerUserController(req, res) {
         password: hash
     })
 
-    const token = jwt.sign(
-        { id: user._id, username: user.username },
-        process.env.JWT_SECRET,
-        { expiresIn: "1d" }
-    )
+    const token = signToken(user)
 
-    res.cookie("token", token)
+    setAuthCookie(res, token)
 
 
     res.status(201).json({
@@ -64,8 +82,9 @@ async function registerUserController(req, res) {
  */
 async function loginUserController(req, res) {
 
-    const { email, password } = req.body
+    const { email, password } = req.body || {}
 
+    if (!email || !password) return res.status(400).json({ message: "Please provide email and password." })
     const user = await userModel.findOne({ email })
 
     if (!user) {
@@ -82,13 +101,9 @@ async function loginUserController(req, res) {
         })
     }
 
-    const token = jwt.sign(
-        { id: user._id, username: user.username },
-        process.env.JWT_SECRET,
-        { expiresIn: "1d" }
-    )
+    const token = signToken(user)
 
-    res.cookie("token", token)
+    setAuthCookie(res, token)
     res.status(200).json({
         message: "User loggedIn successfully.",
         user: {
@@ -112,7 +127,10 @@ async function logoutUserController(req, res) {
         await tokenBlacklistModel.create({ token })
     }
 
-    res.clearCookie("token")
+    const clearOptions = { httpOnly: true, sameSite: cookieOptions.sameSite, secure: cookieOptions.secure }
+    res.clearCookie("token", { ...clearOptions, path: "/" })
+    // Remove cookies issued by the previous default /api/auth path as well.
+    res.clearCookie("token", { ...clearOptions, path: "/api/auth" })
 
     res.status(200).json({
         message: "User logged out successfully"
@@ -127,8 +145,13 @@ async function logoutUserController(req, res) {
 async function getMeController(req, res) {
 
     const user = await userModel.findById(req.user.id)
+    if (!user) {
+        res.clearCookie("token", { httpOnly: true, sameSite: cookieOptions.sameSite, secure: cookieOptions.secure, path: "/" })
+        return res.status(401).json({ message: "Account no longer exists." })
+    }
 
-
+    // Refresh legacy auth cookies with the root path so interview API routes receive them.
+    setAuthCookie(res, signToken(user))
 
     res.status(200).json({
         message: "User details fetched successfully",

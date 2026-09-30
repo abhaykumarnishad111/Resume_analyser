@@ -1,0 +1,10 @@
+.button {
+  display: inline-flex; align-items: center; justify-content: center;
+  border: 1px solid transparent; border-radius: 11px; padding: .82rem 1.15rem;
+  background: #292a30; color: #f4f2ef; font-family: inherit; font-size: .95rem; font-weight: 600; cursor: pointer;
+  transition: background .18s, border-color .18s, transform .18s, box-shadow .18s;
+  &.primary-button { background: linear-gradient(135deg, #ed6689, #d9436e); color: #fff; box-shadow: 0 6px 20px rgb(217 62 105 / 16%); }
+  &.primary-button:hover:not(:disabled) { background: linear-gradient(135deg, #f17896, #e24a75); box-shadow: 0 9px 24px rgb(217 62 105 / 25%); transform: translateY(-1px); }
+  &:active:not(:disabled) { transform: translateY(0) scale(.99); }
+  &:disabled { cursor: wait; opacity: .65; }
+}
