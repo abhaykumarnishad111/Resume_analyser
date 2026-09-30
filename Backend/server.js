@@ -5,7 +5,7 @@ const connectToDB=require("./src/config/database")
 const PORT = process.env.PORT || 3000
 
 connectToDB()
-  .then(() => app.listen(PORT, () => console.log(`Server is running on port ${PORT}`)))
+  .then(() => app.listen(PORT, "0.0.0.0", () => console.log(`Server is running on port ${PORT}`)))
   .catch((err) => {
     console.error("Could not connect to MongoDB:", err.message)
     process.exit(1)

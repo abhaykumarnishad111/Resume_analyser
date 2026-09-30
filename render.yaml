@@ -1,0 +1,26 @@
+services:
+  - type: web
+    name: resume-analyser-api
+    runtime: docker
+    region: singapore
+    plan: free
+    dockerfilePath: ./Backend/Dockerfile
+    dockerContext: ./Backend
+    healthCheckPath: /api/health
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: COOKIE_SAME_SITE
+        value: lax
+      - key: FRONTEND_ORIGIN
+        value: http://localhost:5173
+      - key: GOOGLE_GENAI_MODEL
+        value: gemini-3.8-flash
+      - key: GOOGLE_GENAI_FALLBACK_MODEL
+        value: gemini-3.5-flash-lite
+      - key: MONGO_URI
+        sync: false
+      - key: GOOGLE_GENAI_API_KEY
+        sync: false
+      - key: JWT_SECRET
+        generateValue: true

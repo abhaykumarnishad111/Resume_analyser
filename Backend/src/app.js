@@ -1,5 +1,6 @@
 const express = require("express")
 const cookieParser = require("cookie-parser")
+const mongoose = require("mongoose")
 const authRouter = require("./routes/auth.routes")
 const interviewRouter = require("./routes/interview.routes")
 
@@ -21,6 +22,11 @@ app.use((req, res, next) => {
   }
   if (req.method === "OPTIONS") return res.sendStatus(204)
   next()
+})
+
+app.get("/api/health", (req, res) => {
+  const databaseConnected = mongoose.connection.readyState === 1
+  res.status(databaseConnected ? 200 : 503).json({ status: databaseConnected ? "ok" : "database-unavailable" })
 })
 
 app.use("/api/auth", authRouter)
