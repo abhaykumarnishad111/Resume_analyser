@@ -28,20 +28,26 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     libxfixes3 \
     libxkbcommon0 \
     libxrandr2 \
-    && rm -rf /var/lib/apt/lists/* \
-    && mkdir -p /app /home/node/.cache/puppeteer \
-    && chown -R node:node /app /home/node/.cache
+    && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app
-USER node
 
-COPY --chown=node:node package*.json ./
+COPY package*.json ./
+
 RUN npm ci --omit=dev
 
+# Install Chrome while running as root
 RUN npx puppeteer browsers install chrome
 
-COPY --chown=node:node server.js ./server.js
-COPY --chown=node:node src ./src
+# Give the node user access to the Puppeteer cache
+RUN mkdir -p /home/node/.cache/puppeteer \
+    && chown -R node:node /home/node/.cache/puppeteer
+
+COPY server.js ./server.js
+COPY src ./src
+
+USER node
 
 EXPOSE 10000
+
 CMD ["node", "server.js"]
