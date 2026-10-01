@@ -5,7 +5,8 @@ import { useNavigate } from 'react-router'
 
 const Home = () => {
 
-    const { loading, error, generateReport,reports } = useInterview()
+    const { loading, error, generateReport, reports } = useInterview()
+    const recentReports = Array.isArray(reports) ? reports : []
     const [ jobDescription, setJobDescription ] = useState("")
     const [ selfDescription, setSelfDescription ] = useState("")
     const [formError, setFormError] = useState("")
@@ -131,11 +132,11 @@ const Home = () => {
             </div>
 
             {/* Recent Reports List */}
-            {reports.length > 0 && (
+            {recentReports.length > 0 && (
                 <section className='recent-reports'>
                     <h2>My Recent Interview Plans</h2>
                     <ul className='reports-list'>
-                        {reports.map(report => (
+                        {recentReports.map(report => (
                             <li key={report._id} className='report-item' onClick={() => navigate(`/interview/${report._id}`)}>
                                 <h3>{report.title || 'Untitled Position'}</h3>
                                 <p className='report-meta'>Generated on {new Date(report.createdAt).toLocaleDateString()}</p>

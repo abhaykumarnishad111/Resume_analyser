@@ -51,7 +51,7 @@ export const useInterview = () => {
         setError("")
         try {
             const response = await getAllInterviewReports()
-            setReports(response.interviewReports)
+            setReports(Array.isArray(response.interviewReports) ? response.interviewReports : [])
         } catch (error) {
             setError(error.response?.data?.message || error.message || "Could not load reports.")
         } finally {
