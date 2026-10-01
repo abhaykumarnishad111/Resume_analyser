@@ -23,7 +23,7 @@ This repository is configured for a Vercel frontend and a Render API. The Render
 ### 2. Deploy the UI to Vercel
 
 1. Import the same GitHub repository as a new Vercel project and set **Root Directory** to `Frontend`.
-2. Replace `replace-with-render-service.onrender.com` in `Frontend/vercel.json` with the hostname from the Render URL (without `https://` or a trailing slash), commit and push that change, then deploy the Vercel project. Leave `VITE_API_URL` unset; Vercel proxies `/api` to Render.
+2. Set the `/api` rewrite in `Frontend/vercel.json` to the Render service URL, commit and push that change, then deploy the Vercel project. The frontend uses relative `/api` URLs so Vercel proxies requests to Render; remove any `VITE_API_URL` environment variable from Vercel.
 3. Copy the Vercel production URL and set Render's `FRONTEND_ORIGIN` to that exact origin, for example `https://your-project.vercel.app` (no trailing slash). Save and redeploy the API.
 
 The Vercel proxy keeps API calls same-origin in the browser, so the auth cookie can remain `SameSite=Lax; Secure`; React routes fall back to the app entry page, and the full 5 MB resume limit stays available.
