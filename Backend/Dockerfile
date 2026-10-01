@@ -1,10 +1,12 @@
 FROM node:22-bookworm-slim
 
 ENV NODE_ENV=production \
-    PUPPETEER_CACHE_DIR=/home/node/.cache/puppeteer
+    PUPPETEER_SKIP_DOWNLOAD=true \
+    CHROME_BIN=/usr/bin/chromium
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
     ca-certificates \
+    chromium \
     fonts-liberation \
     libasound2 \
     libatk-bridge2.0-0 \
@@ -35,13 +37,6 @@ WORKDIR /app
 COPY package*.json ./
 
 RUN npm ci --omit=dev
-
-# Install Chrome while running as root
-RUN npx puppeteer browsers install chrome
-
-# Give the node user access to the Puppeteer cache
-RUN mkdir -p /home/node/.cache/puppeteer \
-    && chown -R node:node /home/node/.cache/puppeteer
 
 COPY server.js ./server.js
 COPY src ./src

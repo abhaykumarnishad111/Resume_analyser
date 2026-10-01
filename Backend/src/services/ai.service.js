@@ -68,7 +68,11 @@ async function generateResumePdf({ resume, selfDescription, jobDescription }) {
     responseSchema: { type: "OBJECT", properties: { html: { type: "STRING" } }, required: ["html"] },
   })
   const { html } = JSON.parse(response.text)
-  const browser = await puppeteer.launch({ headless: true, args: ["--no-sandbox", "--disable-setuid-sandbox"] })
+  const browser = await puppeteer.launch({
+    headless: true,
+    executablePath: process.env.CHROME_BIN || undefined,
+    args: ["--no-sandbox", "--disable-setuid-sandbox"],
+  })
   try {
     const page = await browser.newPage()
     await page.setContent(html, { waitUntil: "domcontentloaded", timeout: 15000 })
